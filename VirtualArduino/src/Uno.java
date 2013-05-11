@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+import exceptions.InstructionNotFoundException;
+
 
 public class Uno {
 	
@@ -25,7 +27,7 @@ public class Uno {
 	
 	byte dataBus;
 	int pc;
-	
+	int clock;
 	
 	public Uno() {
 		
@@ -45,7 +47,7 @@ public class Uno {
 		
 		dataBus = 0;
 		pc = 0;
-
+		clock = 0;
 	}
 	
 	
@@ -53,6 +55,43 @@ public class Uno {
 		File program = new File("program.hex");
 		HexFileParser hfp = new HexFileParser(program);
 		flashMemory_program = hfp.parseFile();
+	}
+	
+	public void execProgram() throws InstructionNotFoundException {
+		
+		pc = 0;
+		clock = 0;
+		byte leastSig, mostSig;
+		byte nextLeastSig, nextMostSig;
+		
+		while(pc < 27648) {
+			
+			leastSig = flashMemory_program[pc];
+			mostSig = flashMemory_program[pc+1];
+			
+			if (match16BitInstruction(mostSig, leastSig))
+				pc += 2;
+			else {
+				nextLeastSig = flashMemory_program[pc+2];
+				nextMostSig = flashMemory_program[pc+3];
+				
+				if (match32BitInstruction(mostSig, leastSig, nextMostSig, nextLeastSig))
+					pc += 4;
+				else {
+					throw new InstructionNotFoundException();
+				}
+			}
+			
+		}
+		
+	}
+	
+	public boolean match16BitInstruction(byte mostSig, byte leastSig) {
+		return true;
+	}
+	
+	public boolean match32BitInstruction(byte mostSig, byte leastSig, byte nextMostSig, byte nextLeastSig) {
+		return true;
 	}
 
 //	// X-Register getter
@@ -118,44 +157,7 @@ public class Uno {
 //		}
 //	}
 //	
-	
-	// 16-bit Instructions
-	// each lines contains the following:-
-	// - 
-	public void addInstructions(String filename) throws FileNotFoundException {
 
-		FileReader instructions = new FileReader(filename);
-		BufferedReader reader = new BufferedReader(instructions);
-//		:10 0000 00 0C946100 0C947E00 0C947E00 0C947E00 95
-
-		
-		while(true) {
-			
-			try {
-				
-				String line = reader.readLine();
-				
-				if (line.charAt(0) == ':') {
-					// Byte count, 16 (0x10) or 32 (0x20)
-					if (line.substring(1,3).equals("10")) {
-						String address = line.substring(3,7);
-						
-					}
-					if (line.substring(1,3).equals("20")) {
-						String address = line.substring(3,7);
-					}
-					
-				}
-				
-			} catch(Exception e) {
-				break;
-			}
-
-			
-		}
-		
-		
-	}
 	
 	public static void main(String[] args) throws IOException {
 

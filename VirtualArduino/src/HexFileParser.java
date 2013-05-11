@@ -1,6 +1,6 @@
 /**************************************************************** 
 
- *  Most of the code in this class is taken for the 
+ *  Most of the code in this class is taken from the 
 HexFileParser.java file produced by MIT Media Laboratory.
 http://alumni.media.mit.edu/~deva/software/HexFileParser.java
 Some updates have been done to fit the purpose of this project.

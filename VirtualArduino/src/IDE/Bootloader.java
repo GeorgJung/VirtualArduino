@@ -6,7 +6,10 @@ import java.util.LinkedList;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
-public class Bootloader {
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+
+public class Bootloader implements SerialPortEventListener {
 
 	final static byte[] STK_GET_SYNC = { 48, 32 };// decimal
 	final static byte[] STK_OK = { 20, 16 };
@@ -59,12 +62,71 @@ public class Bootloader {
 	static LinkedList<Integer> count = new LinkedList<Integer>();
 	static LinkedList<byte[]> verify = new LinkedList<byte[]>();
 
-	public static void main(String[] args) throws IOException {
+	static SerialPort serialPort;
 
-		SerialPort serialPort = new SerialPort("COM5");
+	/*
+	 * public static void main(String[] args) throws IOException { port();
+	 * setup(); // for testing
+	 * 
+	 * for (int i = 0; i < code.size(); i++) { byte block = code.get(i);
+	 * 
+	 * }
+	 * 
+	 * 
+	 * }
+	 */
+
+	public void serialEvent(SerialPortEvent event) {
+		/*
+		 * switch (event.getEventType()) { case SerialPortEvent.RXCHAR:
+		 * System.out.println("Data available"); break; }
+		 */
+		if (event.isRXCHAR()) {
+			try {
+				System.out.println("DATA AVAILABLE");
+				runBootloader();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public static void port() {
+		serialPort = new SerialPort("COM2");
 		try {
 			serialPort.openPort();// Open serial port
+
 			serialPort.setParams(9600, 8, 1, 0);// Set params.
+		} catch (SerialPortException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	public static void setup() {
+
+		try {
+			serialPort.addEventListener(new Bootloader());
+		} catch (SerialPortException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	public static void runBootloader() throws IOException {
+
+		/*
+		 * int mask = SerialPort.MASK_RXCHAR + SerialPort.MASK_CTS +
+		 * SerialPort.MASK_DSR;//Prepare mask
+		 * serialPort.setEventsMask(mask);//Set mask
+		 * serialPort.addEventListener(new SerialPortReader());//Add
+		 * SerialPortEventListener
+		 */
+		try {
+
 			while (true) {
 
 				byte[] buffer = new byte[2000];
@@ -75,11 +137,10 @@ public class Bootloader {
 					byte[] out = getReply(buffer);
 
 					serialPort.writeBytes(out);
-					if (equate2(buffer, STK_LEAVE_PROGMODE)) {
-						serialPort.closePort();// Close serial port
-						break;
-					}
-
+					/*
+					 * if (equate2(buffer, STK_LEAVE_PROGMODE)) {
+					 * //serialPort.closePort();// Close serial port break; }
+					 */
 				}
 
 			}
@@ -87,13 +148,6 @@ public class Bootloader {
 		} catch (SerialPortException ex) {
 			System.out.println(ex);
 		}
-		// for testing
-		/*
-		 * for (int i = 0; i < code.size(); i++) { byte block = code.get(i);
-		 * System.out.printf("%02X", block); System.out.println("");
-		 * 
-		 * }
-		 */
 	}
 
 	public static byte[] getReply(byte[] buffer) throws IOException {
@@ -187,8 +241,12 @@ public class Bootloader {
 
 			verify.add(block);
 
-			for (int i = 0; i < block.length; i++)
+			for (int i = 0; i < block.length; i++) {
 				code.add(block[i]);
+
+				// System.out.print(block[i]);
+				// System.out.println("");
+			}
 			return STK_OK;
 		}
 		if (equate2(buffer, STK_PROG_PAGE)) {
